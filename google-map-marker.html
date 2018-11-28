@@ -259,9 +259,11 @@ child of `google-map`.
 
           /**
            * The marker's label.
+           *
+           * @type string|google.maps.MarkerLabel
            */
           label: {
-            type: String,
+            type: Object,
             value: null,
             observer: '_labelChanged'
           },
