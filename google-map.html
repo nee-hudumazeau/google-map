@@ -186,6 +186,12 @@ If you're seeing the message "You have included the Google Maps API multiple tim
          */
 
         /**
+         * Fired when the bounds change.
+         *
+         * @event google-map-bounds
+         */
+
+        /**
          * Polymer properties for the google-map custom element.
          */
         properties: {
@@ -637,6 +643,8 @@ If you're seeing the message "You have included the Google Maps API multiple tim
               url: this.kml,
               map: this.map
             });
+
+            this.fireBounds();
           }
         },
 
@@ -679,6 +687,7 @@ If you're seeing the message "You have included the Google Maps API multiple tim
         _zoomChanged: function() {
           if (this.map) {
             this.map.setZoom(Number(this.zoom));
+            this.fireBounds();
           }
         },
 
@@ -809,6 +818,7 @@ If you're seeing the message "You have included the Google Maps API multiple tim
             }
 
             this.map.setCenter(latLngBounds.getCenter());
+            this.fireBounds();
           }
         },
 
@@ -817,14 +827,20 @@ If you're seeing the message "You have included the Google Maps API multiple tim
             var center = this.map.getCenter();
             this.latitude = center.lat();
             this.longitude = center.lng();
+            this.fireBounds();
           }.bind(this));
 
           google.maps.event.addListener(this.map, 'zoom_changed', function() {
             this.zoom = this.map.getZoom();
+            this.fireBounds();
           }.bind(this));
 
           google.maps.event.addListener(this.map, 'maptypeid_changed', function() {
             this.mapType = this.map.getMapTypeId();
+          }.bind(this));
+
+          google.maps.event.addListenerOnce(this.map, 'idle', function(){
+            this.fireBounds();
           }.bind(this));
 
           this._clickEventsChanged();
@@ -855,6 +871,26 @@ If you're seeing the message "You have included the Google Maps API multiple tim
             this.$.selector.selected = null;
           } else if (this.$.selector.selectedValues) {
             this.$.selector.selectedValues = this.$.selector.selectedValues.filter(function(i) {return i !== markerIndex});
+          }
+        },
+
+        fireBounds: function() {
+          var bounds = this.map.getBounds();
+
+          if (bounds) {
+            var nortEast = bounds.getNorthEast();
+            var southWest = bounds.getSouthWest();
+
+            this.fire('google-map-bounds', {
+              ne: {
+                lat: nortEast.lat(),
+                lng: nortEast.lng()
+              },
+              sw: {
+                lat: southWest.lat(),
+                lng: southWest.lng()
+              }
+            });
           }
         }
       });
